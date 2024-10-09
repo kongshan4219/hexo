@@ -24,29 +24,23 @@ jobs:
           echo "  StrictHostKeyChecking no" >> ~/.ssh/config
           chmod 600 ~/.ssh/config
 
-      # 步骤 2: 获取部署锁（无限重试）
+      # 步骤 2: 获取部署锁（在服务器中重试获取）
       - name: Acquire deployment lock
         run: |
-          echo "Attempting to acquire deployment lock..."
-          while true; do
-            ssh -o StrictHostKeyChecking=no ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "
+          echo "Attempting to acquire deployment lock on the server..."
+          ssh -o StrictHostKeyChecking=no ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "
+            while true; do
               if [ ! -f /tmp/deploy.lock ]; then
                 touch /tmp/deploy.lock
                 echo 'Lock acquired.'
                 exit 0
               else
                 echo 'Deployment lock exists. Waiting...'
-                exit 1
+                sleep 5  # 等待5秒后重试
               fi
-            "
-            if [ $? -eq 0 ]; then
-              echo "Successfully acquired deployment lock."
-              break
-            else
-              echo "Failed to acquire lock. Retrying in 5 seconds..."
-              sleep 5
-            fi
-          done
+            done
+          "
+
 
       # 步骤 3: 检出代码
       - name: Checkout code
