@@ -13,6 +13,15 @@ jobs:
       cancel-in-progress: false  # 等待前一个工作流执行完成，而不是取消
 
     steps:
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "Host *" > ~/.ssh/config
+        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+        chmod 600 ~/.ssh/config
+        
     - name: Acquire deployment lock
       run: |
         echo "Attempting to acquire deployment lock..."
@@ -76,15 +85,6 @@ jobs:
         hexo generate
         sleep 5  # 可选，确保生成操作完全完成
         hexo generate
-
-    - name: Set up SSH key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        echo "Host *" > ~/.ssh/config
-        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-        chmod 600 ~/.ssh/config
 
     - name: Deploy to HWHK server
       run: |
