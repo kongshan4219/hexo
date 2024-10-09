@@ -14,6 +14,7 @@ const dest = path.resolve(baseDir, destRelative);
 
 async function copyFiles(src, dest) {
     try {
+        console.log(`========================\n=========================\n=========================\n=========================\n=========================\n=========================\n=========================\n=========================`);
         await fs.copy(src, dest);
         console.log(`成功复制文件从 ${src} 到 ${dest}`);
     } catch (err) {
