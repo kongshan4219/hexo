@@ -113,10 +113,3 @@ jobs:
         if: always()
         run: |
           ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -f /tmp/deploy.lock && echo 'Deployment lock removed.'"
-
-      # 可选步骤: 部署失败时发送通知
-      - name: Notify if deployment failed
-        if: failure()
-        run: |
-          # 在此添加发送通知的命令，例如调用发送 QQ 消息的脚本
-          ./source/_posts/.script/qq_send_msg_linux_amd64 "部署失败，请检查日志。"
