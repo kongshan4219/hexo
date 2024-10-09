@@ -13,6 +13,29 @@ jobs:
       cancel-in-progress: false  # 等待前一个工作流执行完成，而不是取消
 
     steps:
+    - name: Acquire deployment lock
+      run: |
+        echo "Attempting to acquire deployment lock..."
+        while true; do
+          ssh -o StrictHostKeyChecking=no ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "
+            if [ ! -f /tmp/deploy.lock ]; then
+              touch /tmp/deploy.lock
+              echo 'Lock acquired.'
+              exit 0
+            else
+              echo 'Deployment lock exists. Waiting...'
+              exit 1
+            fi
+          "
+          if [ $? -eq 0 ]; then
+            echo "Successfully acquired deployment lock."
+            break
+          else
+            echo "Failed to acquire lock. Retrying in 5 seconds..."
+            sleep 5
+          fi
+        done
+
     - name: Checkout code
       uses: actions/checkout@v2
       with:
@@ -20,7 +43,7 @@ jobs:
         submodules: true  # 如果需要拉取子模块
         ref: main
 
-    - name: get article
+    - name: Get article
       run: |
         echo "Current working directory:"
         pwd
@@ -72,3 +95,8 @@ jobs:
       run: |
         chmod +x ./source/_posts/.script/qq_send_msg_linux_amd64
         ./source/_posts/.script/qq_send_msg_linux_amd64
+
+    - name: Remove deployment lock
+      if: always()
+      run: |
+        ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -f /tmp/deploy.lock && echo 'Deployment lock removed.'"
