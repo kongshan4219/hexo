@@ -10,116 +10,113 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-group-hexo  # 定义一个统一的组，确保工作流顺序执行
-      cancel-in-progress: false  # 等待前一个工作流执行完成，而不是取消
+      cancel-in-progress: false    # 等待前一个工作流执行完成，而不是取消
 
     steps:
     
-    # 步骤 9: 设置 SSH 密钥
-    - name: Set up SSH key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        echo "Host *" > ~/.ssh/config
-        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-        chmod 600 ~/.ssh/config
-      
-    # 步骤 1: 获取部署锁
-    - name: Acquire deployment lock
-      run: |
-        echo "Attempting to acquire deployment lock..."
-        while true; do
-          ssh -o StrictHostKeyChecking=no ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "
-            if [ ! -f /tmp/deploy.lock ]; then
-              touch /tmp/deploy.lock
-              echo 'Lock acquired.'
-              exit 0
+      # 步骤 1: 设置 SSH 密钥
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "Host *" > ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
+
+      # 步骤 2: 获取部署锁（无限重试）
+      - name: Acquire deployment lock
+        run: |
+          echo "Attempting to acquire deployment lock..."
+          while true; do
+            ssh -o StrictHostKeyChecking=no ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "
+              if [ ! -f /tmp/deploy.lock ]; then
+                touch /tmp/deploy.lock
+                echo 'Lock acquired.'
+                exit 0
+              else
+                echo 'Deployment lock exists. Waiting...'
+                exit 1
+              fi
+            "
+            if [ $? -eq 0 ]; then
+              echo "Successfully acquired deployment lock."
+              break
             else
-              echo 'Deployment lock exists. Waiting...'
-              exit 1
+              echo "Failed to acquire lock. Retrying in 5 seconds..."
+              sleep 5
             fi
-          "
-          if [ $? -eq 0 ]; then
-            echo "Successfully acquired deployment lock."
-            break
-          else
-            echo "Failed to acquire lock. Retrying in 5 seconds..."
-            sleep 5
-          fi
-        done
+          done
 
-    # 步骤 2: 检出代码
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        repository: kongshan4219/hexo
-        submodules: true  # 如果需要拉取子模块
-        ref: main
+      # 步骤 3: 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: kongshan4219/hexo
+          submodules: true  # 如果需要拉取子模块
+          ref: main
 
-    # 步骤 3: 获取文章
-    - name: Get article
-      run: |
-        echo "Current working directory:"
-        pwd
-        echo "Listing all files and directories:"
-        ls -la
-        rm -rf ./source/_posts
-        git clone https://${{ secrets.USER_NAME_GIT }}:${{ secrets.ACCESS_TOKEN_GIT }}@github.com/kongshan4219/yaoye.git ./source/_posts
+      # 步骤 4: 获取文章
+      - name: Get article
+        run: |
+          echo "Current working directory:"
+          pwd
+          echo "Listing all files and directories:"
+          ls -la
+          rm -rf ./source/_posts
+          git clone https://${{ secrets.USER_NAME_GIT }}:${{ secrets.ACCESS_TOKEN_GIT }}@github.com/kongshan4219/yaoye.git ./source/_posts
 
-    # 步骤 4: 设置时区
-    - name: Set timezone to Shanghai
-      run: |
-        sudo timedatectl set-timezone Asia/Shanghai
+      # 步骤 5: 设置时区
+      - name: Set timezone to Shanghai
+        run: |
+          sudo timedatectl set-timezone Asia/Shanghai
 
-    # 步骤 5: 设置 Node.js
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '18.20.4'
+      # 步骤 6: 设置 Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18.20.4'
 
-    # 步骤 6: 打印当前工作目录
-    - name: Print current working directory
-      run: pwd
+      # 步骤 7: 打印当前工作目录
+      - name: Print current working directory
+        run: pwd
 
-    # 步骤 7: 安装依赖
-    - name: Install dependencies
-      run: npm install
+      # 步骤 8: 安装依赖
+      - name: Install dependencies
+        run: npm install
 
-    # 步骤 8: 构建 Hexo
-    - name: Build Hexo
-      run: |
-        chmod +x ./source/_posts/.script/update-time
-        ./source/_posts/.script/update-time
-        npm install -g hexo
-        hexo clean
-        hexo generate
-        sleep 5  # 可选，确保生成操作完全完成
-        hexo generate
+      # 步骤 9: 构建 Hexo
+      - name: Build Hexo
+        run: |
+          chmod +x ./source/_posts/.script/update-time
+          ./source/_posts/.script/update-time
+          npm install -g hexo
+          hexo clean
+          hexo generate
+          sleep 5  # 可选，确保生成操作完全完成
+          hexo generate
 
-    
+      # 步骤 10: 部署到 HWHK 服务器
+      - name: Deploy to HWHK server
+        run: |
+          ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -rf /opt/application/hexo/public"
+          rsync -avz --delete ./public/ ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }}:/opt/application/hexo/public
 
+      # 步骤 11: 发送结果
+      - name: Send result
+        run: |
+          chmod +x ./source/_posts/.script/qq_send_msg_linux_amd64
+          ./source/_posts/.script/qq_send_msg_linux_amd64
 
-    # 步骤 10: 部署到 HWHK 服务器
-    - name: Deploy to HWHK server
-      run: |
-        ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -rf /opt/application/hexo/public"
-        rsync -avz --delete ./public/ ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }}:/opt/application/hexo/public
+      # 步骤 12: 删除部署锁
+      - name: Remove deployment lock
+        if: always()
+        run: |
+          ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -f /tmp/deploy.lock && echo 'Deployment lock removed.'"
 
-    # 步骤 11: 发送结果
-    - name: Send result
-      run: |
-        chmod +x ./source/_posts/.script/qq_send_msg_linux_amd64
-        ./source/_posts/.script/qq_send_msg_linux_amd64
-
-    # 步骤 12: 删除部署锁
-    - name: Remove deployment lock
-      if: always()
-      run: |
-        ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -f /tmp/deploy.lock && echo 'Deployment lock removed.'"
-
-    # 可选步骤: 部署失败时发送通知
-    - name: Notify if deployment failed
-      if: failure()
-      run: |
-        # 在此添加发送通知的命令，例如调用发送 QQ 消息的脚本
-        ./source/_posts/.script/qq_send_msg_linux_amd64 "部署失败，请检查日志。"
+      # 可选步骤: 部署失败时发送通知
+      - name: Notify if deployment failed
+        if: failure()
+        run: |
+          # 在此添加发送通知的命令，例如调用发送 QQ 消息的脚本
+          ./source/_posts/.script/qq_send_msg_linux_amd64 "部署失败，请检查日志。"
