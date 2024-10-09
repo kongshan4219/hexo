@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随机古诗词</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', 'SimSun', '宋体', sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 800px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        .poem {
+            margin-bottom: 2rem;
+        }
+        .title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4a4a4a;
+            margin-bottom: 0.5rem;
+        }
+        .author, .dynasty {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        .content {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #333;
+            text-align: center;
+        }
+        .verse {
+            display: inline-block;
+            margin-right: 1em;
+        }
+        .verse:last-child {
+            margin-right: 0;
+        }
+        .line {
+            margin-bottom: 0.5em;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>随机古诗词</h1>
+        <div class="poem">
+            <div class="title" id="title"></div>
+            <div class="author" id="author"></div>
+            <div class="dynasty" id="dynasty"></div>
+            <div class="content" id="content"></div>
+        </div>
+        <button onclick="getRandomPoetry()">随机诗词</button>
+    </div>
+
+    <script>
+        function formatPoetry(content) {
+            const punctuations = ['。', '？', '！', '，', '、', '；', '：'];
+            const lines = [];
+            let currentLine = '';
+            let currentVerse = '';
+
+            for (let i = 0; i < content.length; i++) {
+                const char = content[i];
+                currentVerse += char;
+
+                if (punctuations.includes(char)) {
+                    currentLine += `<span class="verse">${currentVerse}</span>`;
+                    currentVerse = '';
+
+                    if (['。', '？', '！'].includes(char)) {
+                        lines.push(`<div class="line">${currentLine}</div>`);
+                        currentLine = '';
+                    }
+                }
+            }
+
+            // 处理最后可能没有结束标点的情况
+            if (currentVerse) {
+                currentLine += `<span class="verse">${currentVerse}</span>`;
+            }
+            if (currentLine) {
+                lines.push(`<div class="line">${currentLine}</div>`);
+            }
+
+            return lines.join('');
+        }
+
+        function getRandomPoetry() {
+            fetch('https://api.kongshan.cc/random-poetry')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('title').textContent = data.title;
+                    document.getElementById('author').textContent = data.author;
+                    document.getElementById('dynasty').textContent = data.dynasty;
+                    document.getElementById('content').innerHTML = formatPoetry(data.content);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // 页面加载时获取一首诗词
+        getRandomPoetry();
+    </script>
+</body>
+</html>

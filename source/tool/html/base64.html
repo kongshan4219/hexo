@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图片转Base64编码并展示和下载</title>
+</head>
+<body>
+    <h1>图片转Base64编码并展示和下载</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <br>
+    <textarea id="base64Input" rows="10" cols="50" placeholder="在这里输入Base64编码的字符串或通过文件选择自动生成"></textarea>
+    <br>
+    <button id="showButton">展示图片</button>
+    <a id="downloadButton" style="display:none;">下载图片</a>
+    <br>
+    <img id="base64Image" src="" alt="Base64 Image" style="max-width: 400px; max-height: 400px; margin-top: 20px;">
+
+    <script>
+        // 监听文件选择事件
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64String = e.target.result;
+                    document.getElementById('base64Input').value = base64String;
+                    document.getElementById('base64Image').src = base64String;
+                    showDownloadButton(base64String);
+                };
+                reader.readAsDataURL(file); // 将文件读取为Data URL(base64)
+            }
+        });
+
+        // 监听按钮点击事件，展示Base64编码图片
+        document.getElementById('showButton').addEventListener('click', function() {
+            const base64String = document.getElementById('base64Input').value;
+            if (base64String) {
+                document.getElementById('base64Image').src = base64String;
+                showDownloadButton(base64String);
+            } else {
+                alert("请输入Base64编码的字符串或选择图片文件");
+            }
+        });
+
+        // 显示下载按钮并设置其链接和文件名
+        function showDownloadButton(base64String) {
+            const downloadButton = document.getElementById('downloadButton');
+            downloadButton.style.display = 'inline';
+            downloadButton.href = base64String;
+            downloadButton.download = 'downloaded_image.png';
+        }
+    </script>
+</body>
+</html>

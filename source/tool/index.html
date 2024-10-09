@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+        .card a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+        .card a:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tools</h1>
+    <div class="container">
+    </div>
+
+    <script type="module">
+        import displayNames from './displayNames.js';
+
+        const container = document.querySelector('.container');
+
+        displayNames.forEach(displayName => {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            const link = document.createElement('a');
+            link.href = `./html/${displayName.replace(/ /g, '_')}.html`;
+            link.textContent = displayName;
+
+            card.appendChild(link);
+            container.appendChild(card);
+        });
+    </script>
+</body>
+</html>
