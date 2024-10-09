@@ -319,7 +319,7 @@ footer:
     url:                 # Your deployment provider url, Can be null
 
   record:
-    enable: false        # Option values: true | false
+    enable: true        # Option values: true | false
     list:
       - code: 赣ICP备2023006960号-1            # record code of your website
         link: https://beian.miit.gov.cn/            # record link of your website, Can be null
