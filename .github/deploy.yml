@@ -1,0 +1,74 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-group-hexo  # 定义一个统一的组，确保工作流顺序执行
+      cancel-in-progress: false  # 等待前一个工作流执行完成，而不是取消
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        repository: kongshan4219/hexo
+        submodules: true  # 如果需要拉取子模块
+        ref: main
+
+    - name: get article
+      run: |
+        echo "Current working directory:"
+        pwd
+        echo "Listing all files and directories:"
+        ls -la
+        rm -rf ./source/_posts
+        git clone https://${{ secrets.USER_NAME_GIT }}:${{ secrets.ACCESS_TOKEN_GIT }}@github.com/kongshan4219/yaoye.git ./source/_posts
+
+    - name: Set timezone to Shanghai
+      run: |
+        sudo timedatectl set-timezone Asia/Shanghai
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18.20.4'
+
+    - name: Print current working directory
+      run: pwd
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build Hexo
+      run: |
+        chmod +x ./source/_posts/.script/update-time
+        ./source/_posts/.script/update-time
+        npm install -g hexo
+        hexo clean
+        hexo generate
+        sleep 5  # 可选，确保生成操作完全完成
+        hexo generate
+
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "Host *" > ~/.ssh/config
+        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+        chmod 600 ~/.ssh/config
+
+    - name: Deploy to HWHK server
+      run: |
+        ssh ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }} "rm -rf /opt/application/hexo/public"
+        rsync -avz --delete ./public/ ${{ secrets.HWHK_USERNAME }}@${{ secrets.HWHK_SERVER_IP }}:/opt/application/hexo/public
+
+    - name: Send result
+      run: |
+        chmod +x ./source/_posts/.script/qq_send_msg_linux_amd64
+        ./source/_posts/.script/qq_send_msg_linux_amd64
