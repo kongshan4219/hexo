@@ -52,10 +52,10 @@ first_screen:
   enable: true  # Option values: true | false
 
   # First screen background image in light mode, You can use local image path or image link
-  background_img: https://alist.kongshan.cc/d/ecloudPC/aout.jpg?sign=rVMksr7czTAEMNGMxoO4-NoBqQWAV8U4Tg3J5tMkrOg=:0
+  background_img: /images/c958bf9846331f99f8ddd209a7cabfe399aa03eb.webp
 
   # First screen background image in dark mode, You can use local image path or image link
-  background_img_dark: https://alist.kongshan.cc/d/ecloudPC/aout.jpg?sign=rVMksr7czTAEMNGMxoO4-NoBqQWAV8U4Tg3J5tMkrOg=:0
+  background_img_dark: /images/c958bf9846331f99f8ddd209a7cabfe399aa03eb.webp
 
   # First screen description
   # You can use the "||" to begin a newline, maximum is two lines.
