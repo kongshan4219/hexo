@@ -104,5 +104,5 @@ deploy:
   type: ''
 
 mermaid:
- enable: true
- version: 10.9.1
+  enable: true
+  version: 10.9.1
