@@ -342,6 +342,6 @@ inject:
   js:
     -
     # e.g.
-    - /css/custom.js
+    - /js/custom.js
     # - /js/custom-2.js
     # - ...
