@@ -54,7 +54,7 @@ highlight:
   exclude_languages:
     - mermaid
 prismjs:
-  enable: true
+  enable: false
   preprocess: true
   line_number: true
   tab_replace: ''
