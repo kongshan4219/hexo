@@ -91,10 +91,10 @@ social_contact:
 # ---------------------------------------------------------------------------------------
 scroll:
   # Show progress bar in top when page scroll
-  progress_bar: false  # Option values: true | false
+  progress_bar: true  # Option values: true | false
 
   # Show percent when page scroll
-  percent: false       # Option values: true | false
+  percent: true       # Option values: true | false
 
   # Hide header in top when page scroll
   hide_header: true    # Option values: true | false
