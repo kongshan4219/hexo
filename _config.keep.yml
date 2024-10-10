@@ -24,7 +24,7 @@ base_info:
   logo: null
 
   # Website favicon, You can use local image path or image link
-  favicon: /images/kong.svg
+  favicon: /images/kong-shan.svg
 
 
 # ---------------------------------------------------------------------------------------
