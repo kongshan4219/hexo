@@ -346,3 +346,6 @@ inject:
     # - /js/custom-2.js
     # - ...
 
+mermaid:
+  enable: true
+  version: 10.9.1
