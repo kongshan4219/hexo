@@ -106,3 +106,9 @@ deploy:
 mermaid:
   enable: true
   version: 10.9.1
+
+search:
+  path: search.json
+  field: post
+  content: true
+  format: striptags
