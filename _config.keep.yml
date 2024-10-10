@@ -21,10 +21,10 @@ base_info:
   avatar: /images/avatar_me.webp
 
   # Website LOGO, You can use local image path or image link
-  logo: null
+  logo: /images/kong.svg
 
   # Website favicon, You can use local image path or image link
-  favicon: null
+  favicon: /images/kong.svg
 
 
 # ---------------------------------------------------------------------------------------
