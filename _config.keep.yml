@@ -321,8 +321,10 @@ footer:
   record:
     enable: false        # Option values: true | false
     list:
-      - code:            # record code of your website
-        link:            # record link of your website, Can be null
+      - code: 赣ICP备2023006960号-1            # record code of your website
+        link: https://beian.miit.gov.cn/            # record link of your website, Can be null
+      - code: 赣公网安备36112602000037      
+        link: https://beian.mps.gov.cn/#/query/webSearch?code=36112602000037
       # e.g.
       # - code: ICP 001
       # - link: https://beian.miit.gov.cn
