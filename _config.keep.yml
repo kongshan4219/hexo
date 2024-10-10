@@ -205,8 +205,8 @@ website_count:
 # See: https://github.com/theme-next/hexo-generator-searchdb
 # ---------------------------------------------------------------------------------------
 local_search:
-  enable: false   # Option values: true | false
-  preload: false  # Preload the search data when the page loads. Option values: true | false
+  enable: true   # Option values: true | false
+  preload: true  # Preload the search data when the page loads. Option values: true | false
 
 
 # ---------------------------------------------------------------------------------------
@@ -345,7 +345,3 @@ inject:
     # - /js/custom-1.js
     # - /js/custom-2.js
     # - ...
-
-mermaid:
-  enable: true
-  version: 10.9.1
