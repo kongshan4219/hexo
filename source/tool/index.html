@@ -52,7 +52,8 @@
             card.className = 'card';
 
             const link = document.createElement('a');
-            link.href = `./html/${displayName.replace(/ /g, '_')}.html`;
+            // link.href = `./html/${displayName.replace(/ /g, '_')}.html`;
+            link.href = `./html/${displayName.replace(/ /g, '_')}/index.html`;
             link.textContent = displayName;
 
             card.appendChild(link);
