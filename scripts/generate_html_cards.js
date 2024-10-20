@@ -9,39 +9,22 @@ const htmlDir = path.join(baseDir, '/source/tool/html');
 const toolDir = path.join(baseDir, '/source/tool');
 const jsDir = path.join(toolDir, 'displayNames.js');
 
-// 递归读取文件夹中的所有 .html 文件
-function readHtmlFiles(dir) {
-    let htmlFiles = [];
-    const items = fs.readdirSync(dir);
-
-    items.forEach(item => {
-        const fullPath = path.join(dir, item);
-        const stats = fs.statSync(fullPath);
-
-        if (stats.isDirectory()) {
-            // 如果是目录，递归读取
-            htmlFiles = htmlFiles.concat(readHtmlFiles(fullPath));
-        } else if (stats.isFile() && path.extname(fullPath) === '.html') {
-            // 如果是文件且扩展名为 .html，加入结果
-            htmlFiles.push(fullPath);
-        }
-    });
-
-    return htmlFiles;
-}
-
+// 读取html目录下的子目录，并获取其中的index.html文件
 async function loadHtml() {
-    // 递归获取所有的 .html 文件
-    const htmlFiles = readHtmlFiles(htmlDir);
+    const directories = fs.readdirSync(htmlDir);
 
     const displayNames = [];
 
-    htmlFiles.forEach(file => {
-        const relativePath = path.relative(htmlDir, file);  // 获取相对路径
-        const fileName = path.basename(file, '.html');
-        const displayName = fileName.replace(/_/g, ' ').replace(/-/g, ' ');  // 将文件名格式化为更易读的形式
-        console.log(displayName);
-        displayNames.push(displayName);
+    directories.forEach(dir => {
+        const dirPath = path.join(htmlDir, dir);
+        const indexPath = path.join(dirPath, 'index.html');
+
+        // 判断是否为目录且包含index.html文件
+        if (fs.statSync(dirPath).isDirectory() && fs.existsSync(indexPath)) {
+            const displayName = dir.replace(/_/g, ' ').replace(/-/g, ' ');  // 使用子目录名作为 displayName
+            console.log(displayName);
+            displayNames.push(displayName);
+        }
     });
 
     // 将 displayNames 数组写入 JavaScript 文件
