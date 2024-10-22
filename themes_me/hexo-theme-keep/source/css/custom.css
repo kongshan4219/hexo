@@ -15,3 +15,7 @@
 :root {
     --post-img-align: 0 auto;
 }
+
+body {
+    padding: 20px;
+}
