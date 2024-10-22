@@ -33,10 +33,47 @@
 </head>
 
 <body>
-    <!-- ... (保持其他HTML部分不变) ... -->
+    <h1>Excel Data Mapper</h1>
+
+    <div>
+        <h2>上传数据表格</h2>
+        <input type="file" id="dataFile" accept=".xlsx, .xls">
+    </div>
+
+    <div id="mappingTable"></div>
+
+    <button onclick="mapData()">导入数据</button>
+
+    <div id="resultTable"></div>
+
+    <button id="downloadBtn" style="display:none;" onclick="downloadExcel()">下载 Excel</button>
 
     <script>
-        // ... (保持其他JavaScript变量和函数不变) ...
+        let dataList = [];
+        let dataFields = [];
+        let resultData = [];
+        const templateFields = [
+            "条码", "自编码", "名称", "类别编码", "主供应商编码", "进价", "零售价", "批发价",
+            "会员价", "配送价", "联营扣率", "规格", "单位", "进货规格", "产地", "计价方式",
+            "是否积分", "前台议价", "前台折扣", "门店变价", "助记码", "经营方式", "品牌编码",
+            "保质期", "商品类型"
+        ];
+
+        document.getElementById('dataFile').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet);
+                dataList = json;
+                dataFields = Object.keys(json[0]);
+                updateMappingTable();
+            };
+            reader.readAsArrayBuffer(file);
+        });
 
         function updateMappingTable() {
             if (dataFields.length > 0) {
@@ -94,7 +131,49 @@
             return metrics.width;
         }
 
-        // ... (保持其他JavaScript函数不变) ...
+        function mapData() {
+            const mapping = {};
+            for (let field of templateFields) {
+                const selectValue = document.getElementById(`select_${field}`).value;
+                const inputValue = document.getElementById(`input_${field}`).value;
+                mapping[field] = selectValue || inputValue;
+            }
+
+            resultData = dataList.map(row => {
+                const newRow = {};
+                for (let [templateField, mappedField] of Object.entries(mapping)) {
+                    if (mappedField in row) {
+                        newRow[templateField] = row[mappedField];
+                    } else {
+                        newRow[templateField] = mappedField || '';
+                    }
+                }
+                return newRow;
+            });
+
+            let html = '<table><tr>';
+            for (let field of templateFields) {
+                html += `<th>${field}</th>`;
+            }
+            html += '</tr>';
+            for (let row of resultData.slice(0, 10)) { // 只显示前10行
+                html += '<tr>';
+                for (let field of templateFields) {
+                    html += `<td>${row[field] || ''}</td>`;
+                }
+                html += '</tr>';
+            }
+            html += '</table>';
+            document.getElementById('resultTable').innerHTML = html;
+            document.getElementById('downloadBtn').style.display = 'block';
+        }
+
+        function downloadExcel() {
+            const ws = XLSX.utils.json_to_sheet(resultData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+            XLSX.writeFile(wb, "mapped_data.xls", { bookType: 'xls', type: 'binary' });
+        }
     </script>
 </body>
 
