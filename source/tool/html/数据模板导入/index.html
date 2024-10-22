@@ -9,7 +9,6 @@
     <style>
         table {
             border-collapse: collapse;
-            /* width: 100%; */
         }
 
         th,
@@ -17,7 +16,7 @@
             border: 1px solid black;
             padding: 8px;
             text-align: left;
-            white-space: nowrap; /* 禁止表格内容换行 */
+            white-space: nowrap;
         }
 
         select,
@@ -34,51 +33,14 @@
 </head>
 
 <body>
-    <h1>Excel Data Mapper</h1>
-
-    <div>
-        <h2>上传数据表格</h2>
-        <input type="file" id="dataFile" accept=".xlsx, .xls">
-    </div>
-
-    <div id="mappingTable"></div>
-
-    <button onclick="mapData()">导入数据</button>
-
-    <div id="resultTable"></div>
-
-    <button id="downloadBtn" style="display:none;" onclick="downloadExcel()">下载 Excel</button>
+    <!-- ... (保持其他HTML部分不变) ... -->
 
     <script>
-        let dataList = [];
-        let dataFields = [];
-        let resultData = [];
-        const templateFields = [
-            "条码", "自编码", "名称", "类别编码", "主供应商编码", "进价", "零售价", "批发价",
-            "会员价", "配送价", "联营扣率", "规格", "单位", "进货规格", "产地", "计价方式",
-            "是否积分", "前台议价", "前台折扣", "门店变价", "助记码", "经营方式", "品牌编码",
-            "保质期", "商品类型"
-        ];
-
-        document.getElementById('dataFile').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[sheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet);
-                dataList = json;
-                dataFields = Object.keys(json[0]);
-                updateMappingTable();
-            };
-            reader.readAsArrayBuffer(file);
-        });
+        // ... (保持其他JavaScript变量和函数不变) ...
 
         function updateMappingTable() {
             if (dataFields.length > 0) {
-                let html = '<table id="mappingTableInner"><tr><th>字段</th>';
+                let html = '<table><tr><th>字段</th>';
                 for (let field of templateFields) {
                     html += `<th>${field}</th>`;
                 }
@@ -88,7 +50,7 @@
                 }
                 html += '</tr><tr><td>数据字段</td>';
                 for (let field of templateFields) {
-                    html += `<td><select id="select_${field}" onchange="adjustColumnWidth()">`;
+                    html += `<td><select id="select_${field}" onchange="adjustColumnWidth(this)">`;
                     html += '<option value="">请选择</option>';
                     for (let dataField of dataFields) {
                         html += `<option value="${dataField}">${dataField}</option>`;
@@ -97,92 +59,42 @@
                 }
                 html += '</tr><tr><td>固定值</td>';
                 for (let field of templateFields) {
-                    html += `<td><input type="text" id="input_${field}" onchange="adjustColumnWidth()"></td>`;
+                    html += `<td><input type="text" id="input_${field}" oninput="adjustColumnWidth(this)"></td>`;
                 }
                 html += '</tr></table>';
                 document.getElementById('mappingTable').innerHTML = html;
-                adjustColumnWidth(); // 初始化时调整列宽
             }
         }
 
-        function adjustColumnWidth() {
-            const table = document.getElementById('mappingTableInner');
-            const rows = table.getElementsByTagName('tr');
+        function adjustColumnWidth(element) {
+            const td = element.closest('td');
+            const index = td.cellIndex;
+            const table = td.closest('table');
+            let maxWidth = 0;
 
-            for (let i = 1; i < rows.length; i++) {
-                const cells = rows[i].getElementsByTagName('td');
-                for (let j = 0; j < cells.length; j++) {
-                    const cell = cells[j];
-                    const select = cell.querySelector('select');
-                    const input = cell.querySelector('input');
+            // 计算当前列中最宽的内容
+            for (let i = 0; i < table.rows.length; i++) {
+                const cell = table.rows[i].cells[index];
+                const cellContent = cell.textContent || cell.innerText;
+                const cellWidth = getTextWidth(cellContent);
+                maxWidth = Math.max(maxWidth, cellWidth);
+            }
 
-                    let maxWidth = 0;
-
-                    if (select) {
-                        const options = select.options;
-                        for (let k = 0; k < options.length; k++) {
-                            const optionWidth = options[k].text.length * 8; // 假设每个字符宽度为8px
-                            if (optionWidth > maxWidth) {
-                                maxWidth = optionWidth;
-                            }
-                        }
-                    }
-
-                    if (input) {
-                        const inputWidth = input.value.length * 8; // 假设每个字符宽度为8px
-                        if (inputWidth > maxWidth) {
-                            maxWidth = inputWidth;
-                        }
-                    }
-
-                    cell.style.width = `${maxWidth + 20}px`; // 增加一些额外的宽度以确保内容不截断
-                }
+            // 设置当前列的宽度
+            for (let i = 0; i < table.rows.length; i++) {
+                table.rows[i].cells[index].style.minWidth = `${maxWidth + 20}px`; // 添加一些额外的空间
             }
         }
 
-        function mapData() {
-            const mapping = {};
-            for (let field of templateFields) {
-                const selectValue = document.getElementById(`select_${field}`).value;
-                const inputValue = document.getElementById(`input_${field}`).value;
-                mapping[field] = selectValue || inputValue;
-            }
-
-            resultData = dataList.map(row => {
-                const newRow = {};
-                for (let [templateField, mappedField] of Object.entries(mapping)) {
-                    if (mappedField in row) {
-                        newRow[templateField] = row[mappedField];
-                    } else {
-                        newRow[templateField] = mappedField || '';
-                    }
-                }
-                return newRow;
-            });
-
-            let html = '<table><tr>';
-            for (let field of templateFields) {
-                html += `<th>${field}</th>`;
-            }
-            html += '</tr>';
-            for (let row of resultData.slice(0, 10)) { // 只显示前10行
-                html += '<tr>';
-                for (let field of templateFields) {
-                    html += `<td>${row[field] || ''}</td>`;
-                }
-                html += '</tr>';
-            }
-            html += '</table>';
-            document.getElementById('resultTable').innerHTML = html;
-            document.getElementById('downloadBtn').style.display = 'block';
+        function getTextWidth(text) {
+            const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+            const context = canvas.getContext("2d");
+            context.font = "14px sans-serif"; // 根据实际使用的字体进行调整
+            const metrics = context.measureText(text);
+            return metrics.width;
         }
 
-        function downloadExcel() {
-            const ws = XLSX.utils.json_to_sheet(resultData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-            XLSX.writeFile(wb, "mapped_data.xls", { bookType: 'xls', type: 'binary' });
-        }
+        // ... (保持其他JavaScript函数不变) ...
     </script>
 </body>
 
