@@ -16,6 +16,6 @@
     --post-img-align: 0 auto;
 }
 
-html body {
+html.light-mode body {
     padding: 20px 0;
 }
