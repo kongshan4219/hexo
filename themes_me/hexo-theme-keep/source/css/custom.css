@@ -15,7 +15,3 @@
 :root {
     --post-img-align: 0 auto;
 }
-
-html.light-mode body {
-    padding: 20px 0;
-}
