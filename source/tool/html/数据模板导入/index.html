@@ -9,7 +9,7 @@
     <style>
         table {
             border-collapse: collapse;
-            table-layout: fixed; /* 固定表格布局 */
+            /* width: 100%; */
         }
 
         th,
@@ -18,8 +18,6 @@
             padding: 8px;
             text-align: left;
             white-space: nowrap; /* 禁止表格内容换行 */
-            overflow: hidden; /* 隐藏溢出内容 */
-            text-overflow: ellipsis; /* 显示省略号 */
         }
 
         select,
@@ -90,7 +88,7 @@
                 }
                 html += '</tr><tr><td>数据字段</td>';
                 for (let field of templateFields) {
-                    html += `<td><select id="select_${field}">`;
+                    html += `<td><select id="select_${field}" onchange="adjustColumnWidth()">`;
                     html += '<option value="">请选择</option>';
                     for (let dataField of dataFields) {
                         html += `<option value="${dataField}">${dataField}</option>`;
@@ -99,11 +97,46 @@
                 }
                 html += '</tr><tr><td>固定值</td>';
                 for (let field of templateFields) {
-                    html += `<td><input type="text" id="input_${field}"></td>`;
+                    html += `<td><input type="text" id="input_${field}" onchange="adjustColumnWidth()"></td>`;
                 }
                 html += '</tr></table>';
                 document.getElementById('mappingTable').innerHTML = html;
-                adjustColumnWidths('mappingTableInner');
+                adjustColumnWidth(); // 初始化时调整列宽
+            }
+        }
+
+        function adjustColumnWidth() {
+            const table = document.getElementById('mappingTableInner');
+            const rows = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].getElementsByTagName('td');
+                for (let j = 0; j < cells.length; j++) {
+                    const cell = cells[j];
+                    const select = cell.querySelector('select');
+                    const input = cell.querySelector('input');
+
+                    let maxWidth = 0;
+
+                    if (select) {
+                        const options = select.options;
+                        for (let k = 0; k < options.length; k++) {
+                            const optionWidth = options[k].text.length * 8; // 假设每个字符宽度为8px
+                            if (optionWidth > maxWidth) {
+                                maxWidth = optionWidth;
+                            }
+                        }
+                    }
+
+                    if (input) {
+                        const inputWidth = input.value.length * 8; // 假设每个字符宽度为8px
+                        if (inputWidth > maxWidth) {
+                            maxWidth = inputWidth;
+                        }
+                    }
+
+                    cell.style.width = `${maxWidth + 20}px`; // 增加一些额外的宽度以确保内容不截断
+                }
             }
         }
 
@@ -127,7 +160,7 @@
                 return newRow;
             });
 
-            let html = '<table id="resultTableInner"><tr>';
+            let html = '<table><tr>';
             for (let field of templateFields) {
                 html += `<th>${field}</th>`;
             }
@@ -142,7 +175,6 @@
             html += '</table>';
             document.getElementById('resultTable').innerHTML = html;
             document.getElementById('downloadBtn').style.display = 'block';
-            adjustColumnWidths('resultTableInner');
         }
 
         function downloadExcel() {
@@ -150,27 +182,6 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, "mapped_data.xls", { bookType: 'xls', type: 'binary' });
-        }
-
-        function adjustColumnWidths(tableId) {
-            const table = document.getElementById(tableId);
-            const rows = table.getElementsByTagName('tr');
-
-            for (let i = 0; i < rows[0].cells.length; i++) {
-                let maxWidth = 0;
-
-                for (let j = 0; j < rows.length; j++) {
-                    const cell = rows[j].cells[i];
-                    const cellWidth = cell.scrollWidth;
-                    if (cellWidth > maxWidth) {
-                        maxWidth = cellWidth;
-                    }
-                }
-
-                for (let j = 0; j < rows.length; j++) {
-                    rows[j].cells[i].style.width = `${maxWidth + 20}px`; // 增加一些额外的宽度以确保内容不溢出
-                }
-            }
         }
     </script>
 </body>
