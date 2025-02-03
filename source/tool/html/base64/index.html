@@ -5,50 +5,63 @@
     <title>图片转Base64编码并展示和下载</title>
 </head>
 <body>
-    <h1>图片转Base64编码并展示和下载</h1>
-    <input type="file" id="imageInput" accept="image/*">
-    <br>
-    <textarea id="base64Input" rows="10" cols="50" placeholder="在这里输入Base64编码的字符串或通过文件选择自动生成"></textarea>
-    <br>
-    <button id="showButton">展示图片</button>
-    <a id="downloadButton" style="display:none;">下载图片</a>
-    <br>
-    <img id="base64Image" src="" alt="Base64 Image" style="max-width: 400px; max-height: 400px; margin-top: 20px;">
+<h1>图片转Base64编码并展示和下载</h1>
+<input type="file" id="imageInput" accept="image/*">
+<br>
+<textarea id="base64Input" rows="10" cols="50" placeholder="输入Base64字符串（带或不带前缀）或通过文件选择生成"></textarea>
+<br>
+<label>选择图片类型：
+    <select id="mimeType">
+        <option value="jpeg">JPEG</option>
+        <option value="png">PNG</option>
+        <option value="gif">GIF</option>
+    </select>
+</label>
+<button id="showButton">展示图片</button>
+<a id="downloadButton" style="display:none;">下载图片</a>
+<br>
+<img id="base64Image" src="" alt="Base64 Image" style="max-width: 400px; max-height: 400px; margin-top: 20px;" onerror="alert('图片加载失败，请检查编码或类型')">
 
-    <script>
-        // 监听文件选择事件
-        document.getElementById('imageInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const base64String = e.target.result;
-                    document.getElementById('base64Input').value = base64String;
-                    document.getElementById('base64Image').src = base64String;
-                    showDownloadButton(base64String);
-                };
-                reader.readAsDataURL(file); // 将文件读取为Data URL(base64)
-            }
-        });
+<script>
+    // 生成完整的Data URL
+    function getDataURL(base64Input) {
+        return base64Input.startsWith('data:image/')
+            ? base64Input
+            : `data:image/${document.getElementById('mimeType').value};base64,${base64Input}`;
+    }
 
-        // 监听按钮点击事件，展示Base64编码图片
-        document.getElementById('showButton').addEventListener('click', function() {
-            const base64String = document.getElementById('base64Input').value;
-            if (base64String) {
-                document.getElementById('base64Image').src = base64String;
-                showDownloadButton(base64String);
-            } else {
-                alert("请输入Base64编码的字符串或选择图片文件");
-            }
-        });
+    // 文件选择处理
+    document.getElementById('imageInput').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-        // 显示下载按钮并设置其链接和文件名
-        function showDownloadButton(base64String) {
-            const downloadButton = document.getElementById('downloadButton');
-            downloadButton.style.display = 'inline';
-            downloadButton.href = base64String;
-            downloadButton.download = 'downloaded_image.png';
-        }
-    </script>
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64String = e.target.result;
+            document.getElementById('base64Input').value = base64String;
+            document.getElementById('mimeType').value =
+                base64String.match(/^data:image\/(\w+);/)?.[1] || 'jpeg';
+            updateImage(base64String);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // 展示按钮处理
+    document.getElementById('showButton').addEventListener('click', function() {
+        const base64String = document.getElementById('base64Input').value.trim();
+        if (!base64String) return alert("请输入内容");
+        updateImage(getDataURL(base64String));
+    });
+
+    // 更新图片和下载链接
+    function updateImage(dataURL) {
+        const img = document.getElementById('base64Image');
+        img.src = dataURL;
+        const downloadButton = document.getElementById('downloadButton');
+        downloadButton.style.display = 'inline';
+        downloadButton.href = dataURL;
+        downloadButton.download = `image.${dataURL.split(/[\/;]/)[2] || 'png'}`;
+    }
+</script>
 </body>
 </html>
